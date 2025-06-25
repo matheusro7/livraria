@@ -1,0 +1,16 @@
+# node_modules (depende do seu projeto, mas geralmente é ignorado)
+node_modules/
+
+# .env para variáveis de ambiente sensíveis
+.env
+
+# Logs
+*.log
+
+# Diretórios do sistema (MacOS, Windows)
+.DS_Store
+Thumbs.db
+
+# Diretórios de build ou de cache
+build/
+dist/
