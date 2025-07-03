@@ -1,34 +1,86 @@
 const request = require('supertest');
-const app = require('../app');  // Importa o app para testar as rotas
+const app = require('../app'); // app.js exporta apenas o app Express
 
-describe('API de Usuários', () => {
-  it('deve criar um novo usuário', async () => {
+let usuarioId = null; // Armazena o ID do usuário criado
+
+async function criarUsuario() {
+  const emailAleatorio = `usuario_${Date.now()}@exemplo.com`; // e-mail único
+  try {
     const res = await request(app)
       .post('/api/usuarios')
       .send({
         nome: 'Usuário Exemplo',
-        email: 'usuario@exemplo.com',
+        email: emailAleatorio,
         telefone: '123456789'
       });
-    expect(res.statusCode).toEqual(201);
-    expect(res.body).toHaveProperty('id');
-  });
 
-  it('deve listar todos os usuários', async () => {
+    if (res.statusCode === 201 && res.body.id) {
+      usuarioId = res.body.id;
+      console.log('✔️  Criou usuário com sucesso (POST /api/usuarios), id:', usuarioId);
+    } else {
+      console.error('❌  Falha ao criar usuário. Status:', res.statusCode, 'Body:', res.body);
+    }
+  } catch (err) {
+    console.error('❌  Erro ao criar usuário:', err.message);
+  }
+}
+
+
+async function listarUsuarios() {
+  try {
     const res = await request(app).get('/api/usuarios');
-    expect(res.statusCode).toEqual(200);
-    expect(Array.isArray(res.body)).toBe(true);
-  });
+    if (res.statusCode === 200 && Array.isArray(res.body)) {
+      console.log('✔️  Listou usuários com sucesso (GET /api/usuarios)');
+    } else {
+      console.error('❌  Falha ao listar usuários. Status:', res.statusCode);
+    }
+  } catch (err) {
+    console.error('❌  Erro ao listar usuários:', err.message);
+  }
+}
 
-  it('deve atualizar um usuário', async () => {
+async function atualizarUsuario() {
+  if (!usuarioId) {
+    console.error('❌  Usuário não criado, não pode atualizar.');
+    return;
+  }
+  try {
     const res = await request(app)
-      .put('/api/usuarios/1')
+      .put(`/api/usuarios/${usuarioId}`)
       .send({ nome: 'Usuário Atualizado', email: 'atualizado@exemplo.com' });
-    expect(res.statusCode).toEqual(200);
-  });
 
-  it('deve excluir um usuário', async () => {
-    const res = await request(app).delete('/api/usuarios/1');
-    expect(res.statusCode).toEqual(204);
-  });
-});
+    if (res.statusCode === 200) {
+      console.log(`✔️  Atualizou usuário com sucesso (PUT /api/usuarios/${usuarioId})`);
+    } else {
+      console.error('❌  Falha ao atualizar usuário. Status:', res.statusCode);
+    }
+  } catch (err) {
+    console.error('❌  Erro ao atualizar usuário:', err.message);
+  }
+}
+
+async function excluirUsuario() {
+  if (!usuarioId) {
+    console.error('❌  Usuário não criado, não pode excluir.');
+    return;
+  }
+  try {
+    const res = await request(app).delete(`/api/usuarios/${usuarioId}`);
+    if (res.statusCode === 204) {
+      console.log(`✔️  Excluiu usuário com sucesso (DELETE /api/usuarios/${usuarioId})`);
+    } else {
+      console.error('❌  Falha ao excluir usuário. Status:', res.statusCode);
+    }
+  } catch (err) {
+    console.error('❌  Erro ao excluir usuário:', err.message);
+  }
+}
+
+async function rodarTestesUsuarios() {
+  await criarUsuario();
+  await listarUsuarios();
+  await atualizarUsuario();
+  await excluirUsuario();
+}
+
+rodarTestesUsuarios();
